@@ -1,8 +1,6 @@
 # Домашка по модулю 10.1 SkyPro
 
 ![SkyPro](https://digital-academy.ru/foto/school/skypro-2.png)
-## Домашка по модулю 10.1 SkyPro
-![SkyPro Logo](https://digital-academy.ru/foto/school/skypro-2.png )
 
 IT-отдел крупного банка делает новую фичу для личного кабинета клиента. Это виджет,
    который показывает несколько последних успешных банковских операций клиента.
