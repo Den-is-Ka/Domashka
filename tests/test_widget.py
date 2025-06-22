@@ -19,7 +19,19 @@ def test_mask_account_card(bank_name: str, name_card: str, expected_mask: str):
     assert result == expected_mask
 
 
-def test_get_date():
-    pass
+@pytest.mark.parametrize('data_num, expected',[
+    ('1981-11-17T00:00:01.136347', '17.11.1981')
+])
+
+
+def test_get_date(data_num, expected):
+    assert expected
+
+# def get_date(data_num: str) -> str:
+#     '''
+#        Вывести дату в формате "ДД.ММ.ГГГГ"
+#     '''
+#     correct = data_num[8:10] + "." + data_num[5:7] + "." + data_num[:4]
+#     return correct
 
 
