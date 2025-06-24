@@ -1,5 +1,7 @@
-from src.masks import get_mask_card_number, get_mask_account
 import pytest
+
+from src.masks import get_mask_account, get_mask_card_number
+
 
 @pytest.mark.parametrize("card_number, mask_card_number", [
     # карта (длина не менее 10 символов)
@@ -17,7 +19,6 @@ def test_get_mask_card_number(card_number: str, mask_card_number: str) -> None:
     # карта (длина не менее 10 символов)
     ("7000792289606361", "**6361"),
 ])
-
-def test_get_mask_account(account_number: str, mask_account: str):
+def test_get_mask_account(account_number: str, mask_account: str) -> str:
     result = get_mask_account(account_number)
     assert result == mask_account
