@@ -3,7 +3,10 @@ from src.transaction_data import transactions
 
 
 def test_filter_by_currency_correct_filtering():
-    # Проверяем, что фильтр возвращает только транзакции с валютой USD
+    '''
+    Проверяем, что фильтр возвращает только транзакции с валютой USD
+    '''
+
     result = filter_by_currency(transactions, "USD")
     # Все возвращённые транзакции должны иметь currency code 'USD'
     assert all(t["operationAmount"]["currency"]["code"] == "USD" for t in result)
@@ -12,15 +15,17 @@ def test_filter_by_currency_correct_filtering():
 
 
 def test_filter_by_currency_no_matches():
-    # Проверяем случай, когда валюты нет в списке транзакций
-    result = filter_by_currency(transactions, "EUR")
+    '''
+    Проверяем случай, когда валюты нет в списке транзакций
+    '''
+    result = list(filter_by_currency(transactions, "EUR"))
     assert result == []  # должно вернуть пустой список
 
 
 def test_filter_by_currency_empty_list():
     # Передаём пустой список — генератор не должен выдавать ошибок
     empty_list = []
-    result = filter_by_currency(empty_list, "USD")
+    result = list(filter_by_currency(empty_list, "USD"))
     assert result == []
 
 
@@ -30,7 +35,7 @@ def test_filter_by_currency_no_matching_transactions():
         {"id": 1, "operationAmount": {"amount": "100", "currency": {"name": "EUR", "code": "EUR"}}},
         {"id": 2, "operationAmount": {"amount": "200", "currency": {"name": "JPY", "code": "JPY"}}},
     ]
-    result = filter_by_currency(no_usd_transactions, "USD")
+    result = list(filter_by_currency(no_usd_transactions, "USD"))
     assert result == []
 
 
@@ -74,7 +79,7 @@ def test_card_number_generator_range():
     # Проверяем, что номера в правильном диапазоне и формате
     for i, number in enumerate(results, start=start):
         expected = f"{i:016d}"
-        expected_formatted = " ".join([expected[j: j + 4] for j in range(0, 16, 4)])
+        expected_formatted = " ".join([expected[j : j + 4] for j in range(0, 16, 4)])
         assert number == expected_formatted
 
 
@@ -99,7 +104,7 @@ def test_card_number_edge_cases():
     result = next(gen)
 
     expected_str = f"{start_end:016d}"
-    expected_formatted = " ".join([expected_str[j: j + 4] for j in range(0, 16, 4)])
+    expected_formatted = " ".join([expected_str[j : j + 4] for j in range(0, 16, 4)])
 
     assert result == expected_formatted
 
@@ -118,5 +123,5 @@ def test_card_number_generation_completes():
     # Проверяем последовательность номеров
     for i, number in enumerate(results, start=start):
         expected_str = f"{i:016d}"
-        expected_formatted = " ".join([expected_str[j: j + 4] for j in range(0, 16, 4)])
+        expected_formatted = " ".join([expected_str[j : j + 4] for j in range(0, 16, 4)])
         assert number == expected_formatted
