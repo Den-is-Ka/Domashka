@@ -12,12 +12,12 @@ def test_filter_by_currency_correct_filtering() -> None:
 
 
 def test_filter_by_currency_no_matches() -> None:
-    result = list(filter_by_currency(transactions, "EUR"))
+    result = list(filter_by_currency(transactions, ['USD', 'RUB']))
     assert result == []  # должно вернуть пустой список
 
 
 def test_filter_by_currency_empty_list() -> None:
-    empty_list = []
+    empty_list: list = []
     result = list(filter_by_currency(empty_list, "USD"))
     assert result == []
 
