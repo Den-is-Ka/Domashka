@@ -25,6 +25,6 @@ def test_get_mask_card_number(card_number: str, mask_card_number: str) -> None:
         ("7000792289606361", "**6361"),
     ],
 )
-def test_get_mask_account(account_number: str, mask_account: str) -> str:
+def test_get_mask_account(account_number: str, mask_account: str) -> None:
     result = get_mask_account(account_number)
     assert result == mask_account

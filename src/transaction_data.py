@@ -1,4 +1,4 @@
-transactions = [
+transactions: list = [
     {
         "id": 939719570,
         "state": "EXECUTED",
