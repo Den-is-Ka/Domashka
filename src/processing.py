@@ -12,4 +12,6 @@ def sort_by_date(list_1: list, descending: bool = True) -> list:
     задающий порядок сортировки (по умолчанию — убывание). Функция должна возвращать
     новый список, отсортированный по дате (date).
     """
+
     return sorted(list_1, key=lambda list_1: list_1.get("date", ""), reverse=descending)
+

@@ -9,7 +9,6 @@ def mask_account_card(account_card: str) -> str:
         number_card = account_card[-20:]
         mask_account = get_mask_account(number_card)
         return f"Счет {mask_account}"
-
     else:
         name_card = account_card[-16:]
         mask_account = get_mask_card_number(name_card)
