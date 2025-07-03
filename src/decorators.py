@@ -24,7 +24,6 @@ def log(filename=None):
         return wrapper
     return decorator
 
-@log(filename="Сюда пиши да.txt")
-@log()
+
 def hello():
-    print("Hi!")
+    return None
