@@ -17,8 +17,8 @@ def mask_account_card(account_card: str) -> str:
 
 
 def get_date(data_num: str) -> str:
-    '''
-       Вывести дату в формате "ДД.ММ.ГГГГ"
-    '''
+    """
+    Вывести дату в формате "ДД.ММ.ГГГГ"
+    """
     correct = data_num[8:10] + "." + data_num[5:7] + "." + data_num[:4]
     return correct
