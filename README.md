@@ -105,4 +105,3 @@ log.
 ```bash
    poetry update
 ```
-
