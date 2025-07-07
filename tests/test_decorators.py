@@ -33,6 +33,7 @@ def test_logging_to_file():
     log_path = os.path.join(LOGS_DIR, TEST_LOG_FILE)
     with open(log_path, 'r', encoding='utf-8') as f:
         content = f.read()
+
     assert "завершилась" in content
 
 
