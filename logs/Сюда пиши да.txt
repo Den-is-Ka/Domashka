@@ -32,3 +32,5 @@ func_with_error тип ошибки <class 'ValueError'> с аргументам
 Стартуем функцию hello завершилась.
 Стартуем функцию test_func завершилась.
 func_with_error тип ошибки <class 'ValueError'> с аргументами (), {}
+Стартуем функцию test_func завершилась.
+func_with_error тип ошибки <class 'ValueError'> с аргументами (), {}
