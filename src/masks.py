@@ -1,4 +1,9 @@
+from logger import logger
+
+
 def get_mask_card_number(card_number: str) -> str:
+
+    logger.info(f"Маскируем номер карты: {card_number}")
     """
     Маскируем номер карты, оставляем последние 4 цифры.
     """
@@ -7,6 +12,7 @@ def get_mask_card_number(card_number: str) -> str:
 
 
 def get_mask_account(account_number: str) -> str:
+    logger.info(f"Маскируем номер счета: {account_number}")
     """
     Маскируем номер счета.
     """
