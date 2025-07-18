@@ -1,8 +1,6 @@
 from pathlib import Path
 from typing import Any, Dict, List, Union
-
 import pandas as pd
-
 from config import PATH_CSV, PATH_XLSX
 
 
