@@ -1,150 +1,191 @@
-from config import PATH_CSV, PATH_XLSX
+# import pandas as pd
+import json
+
+# from tests.test_external_api import unittest
+import os
+from typing import Any, Dict, List
+
+from config import PATH_CSV, PATH_JSON, PATH_XLSX
 from src.decorators import hello
+from src.operations import filter_operations_by_description
+from src.processing import filter_by_state, sort_by_date
 from src.transactions_file import get_transactions_file_csv, get_transactions_file_xlsx
 from src.utils import convert_transaction_rub, load_transactions_json
-from tests.test_external_api import unittest
-import os
-import pandas as pd
-import json
-import csv
-from datetime import datetime
-from openpyxl import load_workbook
-from src.operations import (
-    filter_operations_by_description,
-    count_operations_by_category
-)
+from src.widget import get_date, mask_account_card
 
 ROOT_DIR = os.path.dirname(__file__)
 DATA_DIR = os.path.join(ROOT_DIR, 'data')
-PATH_JSON = os.path.join(DATA_DIR, 'operations.json')
-PATH_CSV = os.path.join(DATA_DIR, 'transactions.csv')
-PATH_XLSX = os.path.join(DATA_DIR, 'transactions_excel.xlsx')
 
 VALID_STATUS = ["EXECUTED", "CANCELED", "PENDING"]
 
-# if __name__ == "__main__":
-#     hello()
+if __name__ == "__main__":
+    hello()
 
 
-# if __name__ == '__main__':
-#     transactions = load_transactions_json('data/operations.json')
-#     print(transactions)
-#     print(convert_transaction_rub(transactions[3]))
+if __name__ == '__main__':
+    transactions = load_transactions_json('data/operations.json')
+    print(transactions)
+    print(convert_transaction_rub(transactions[3]))
 
 
 # if __name__ == '__main__':
 #     unittest.main()
 
 
-# if __name__ == '__main__':
-#     csv_transactions = get_transactions_file_csv(PATH_CSV)
-#     print(csv_transactions)
-#     xlsx_transactions = get_transactions_file_xlsx(PATH_XLSX)
-#     print(xlsx_transactions)
+if __name__ == '__main__':
+    csv_transactions = get_transactions_file_csv(PATH_CSV)
+    print(csv_transactions)
+    xlsx_transactions = get_transactions_file_xlsx(PATH_XLSX)
+    print(xlsx_transactions)
 
 
-def read_from_json(path):
-    """
-        Читает список операций из JSON-файла и преобразует в плоский формат, пригодный для Excel/CSV.
-        Структура полей: id, state, date, amount, currency_name, currency_code, from, to, description.
-        """
-    with open(path, encoding='utf-8') as f:
-        raw = json.load(f)
-    # Преобразуем вложенную структуру
-    flat = []
-    for op in raw:
-        amt_info = op.get('operationAmount', {})
-        cur_info = amt_info.get('currency', {})
-        flat.append({
-            'id': op.get('id'),
-            'state': op.get('state'),
-            'date': op.get('date'),
-            'amount': amt_info.get('amount'),
-            'currency_name': cur_info.get('name'),
-            'currency_code': cur_info.get('code'),
-            'from': op.get('from'),
-            'to': op.get('to'),
-            'description': op.get('description'),
+#
+
+def get_transactions_file_json(full_path):
+    """ Загружаем данные из JSON-файла и преобразуем
+    в формат для Exel/CSV. """
+
+    # Загрузка данных из JSON-файла
+    with open(full_path, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+    # Преобразование
+    file_conversion = []
+    for operation in data:
+        file_conversion.append({
+            'id': operation.get('id'),
+            'state': operation.get('state'),
+            'date': operation.get('date'),
+            'amount': operation.get('operationAmount', {}).get('amount', ''),
+            'currency_name': operation.get('operationAmount', {}).get('currency', {}).get('name', ''),
+            'currency_code': operation.get('operationAmount', {}).get('currency', {}).get('code', ''),
+            'from': operation.get('from', ''),
+            'to': operation.get('to', ''),
+            'description': operation.get('description')
         })
-    return flat
+        # if not operation:  # Пропуск пустых операций
+        #     continue
+    return file_conversion
 
 
-def read_from_csv(path):
-    with open(path, encoding='utf-8') as f:
-        reader = csv.DictReader(f, delimiter=';')
-        return list(reader)
+def get_user_choice(prompt: str, valid_choices: List[str]) -> str:
+    """Получаем выбор пользователя """
+    while True:
+        user_input = input(f"{prompt}\nПользователь: ").strip().lower()
+        for choice in valid_choices:
+            if user_input == choice.lower():
+                return choice
+        print(f"Некорректный ввод. Пожалуйста, выберите один из вариантов: {', '.join(valid_choices)}")
 
 
-def read_from_xlsx(path):
-    """Читает список операций из XLSX-файла с помощью pandas.read_excel."""
-    # try:
-    #     import pandas as pd
-    # except ImportError:
-    #     print("Ошибка: модуль pandas не установлен.")
-    #     return []
-    try:
-        df = pd.read_excel(path, engine='openpyxl')
-    except Exception as e:
-        print(f"Ошибка при чтении Excel-файла '{path}': {e}")
-        return []
-    # Преобразуем DataFrame в словари
-    return df.to_dict(orient='records')
+def filter_rub_transactions(transactions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Фильтруем только рублевые транзакции."""
+    return [t for t in transactions if t.get("currency_code") == "RUB"]
 
 
-def parse_date(date_str):
-    """Парсим дату и возвращает datetime."""
-    try:
-        return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
-    except ValueError:
-        return datetime.strptime(date_str, '%d.%m.%Y')
+def print_transaction(transaction: Dict[str, Any]) -> None:
+    """Печатаем информацию о транзакции в нужном формате."""
+    date = get_date(transaction["date"])
+    description = transaction["description"]
+
+    # Обработка from и to
+    from_account = mask_account_card(transaction["from"]) if "from" in transaction and isinstance(transaction["from"], str) else "Не указано"
+    to_account = mask_account_card(transaction["to"]) if "to" in transaction and isinstance(transaction["to"], str) else "Не указано"
+
+    # Получаем сумму и валюту
+    amount = transaction["amount"]
+    currency = transaction["currency_name"]
+
+    # Формируем строку перевода
+    transfer_line = ""
+    if from_account != "Не указано" and to_account != "Не указано":
+        transfer_line = f"{from_account} -> {to_account}"
+    elif to_account != "Не указано":
+        transfer_line = f"{to_account}"
+
+    # Печатаем информацию о транзакции
+    print(f"{date} {description}")
+    if transfer_line:
+        print(transfer_line)
+    print(f"Сумма: {amount} {currency}\n")
 
 
 def main():
-    print("Привет! Выберите формат файла: 1-JSON, 2-CSV, 3-XLSX")
-    choice = input().strip()
+    print('Привет! Добро пожаловать в программу работы с банковскими транзакциями.')
+    print('Выберите необходимый пункт меню:\n'
+          '1. Получить информацию о транзакциях из JSON-файла \n'
+          '2. Получить информацию о транзакциях из CSV-файла \n'
+          '3. Получить информацию о транзакциях из XLSX-файла \n')
 
-    # Определяем путь к файлу из конфига
-    if choice == '1':
-        path = PATH_JSON
-        ops = read_from_json(path)
-        print(f"Выбран JSON-файл: {path}")
-    elif choice == '2':
-        path = PATH_CSV
-        ops = read_from_csv(path)
-        print(f"Выбран CSV-файл: {path}")
-    elif choice == '3':
-        path = PATH_XLSX
-        ops = read_from_xlsx(path)
-        print(f"Выбран XLSX-файл: {path}")
+    # Получаем выбор пользователя
+    file_choice = input("Пользователь: ").strip()
+
+    # Определяем путь к файлу
+    transactions = []
+    if file_choice == "1":
+        print("\nПрограмма: Для обработки выбран JSON-файл.\n")
+        transactions = get_transactions_file_json(PATH_JSON)
+    elif file_choice == "2":
+        print("\nПрограмма: Для обработки выбран CSV-файл.\n")
+        transactions = get_transactions_file_csv(PATH_CSV)
+    elif file_choice == "3":
+        print("\nПрограмма: Для обработки выбран XLSX-файл.\n")
+        transactions = get_transactions_file_xlsx(PATH_XLSX)
     else:
-        print("Некорректный выбор формата.")
+        print("Неверный выбор. Завершение программы.")
         return
 
-    # Фильтр по статусу
-    status = input(f"Введите статус ({', '.join(VALID_STATUS)}): ").upper()
-    while status not in VALID_STATUS:
-        status = input("Неверный статус. Повторите: ").upper()
-    ops = [o for o in ops if str(o.get('state', '')).upper() == status]
+    if not transactions:
+        print("Не удалось загрузить транзакции. Файл пуст или имеет неверный формат.")
+        return
+
+    # Фильтруем по статусу
+    valid_statuses = ["EXECUTED", "CANCELED", "PENDING"]
+    while True:
+        print("Программа: Введите статус, по которому необходимо выполнить фильтрацию. \n"
+              f"Доступные для фильтровки статусы: {', '.join(valid_statuses)} \n")
+        status = input("Пользователь: ").strip().upper()
+
+        if status in valid_statuses:
+            print(f'\nПрограмма: Операции отфильтрованы по статусу "{status}" \n')
+            filtered_transactions = filter_by_state(transactions, status)
+            break
+        else:
+            print(f'\nПрограмма: Статус операции "{status}" недоступен. \n')
+
+    if not filtered_transactions:
+        print("Не найдено ни одной транзакции с указанным статусом.")
+        return
 
     # Сортируем по дате
-    if input("Сортировать по дате? Да(1)/Нет: ").lower().startswith('1'):
-        asc = input("По возрастанию? Да(1)/Нет: ").lower().startswith('1')
-        ops.sort(key=lambda o: parse_date(o.get('date', '')), reverse=not asc)
+    sort_choice = get_user_choice("Программа: Отсортировать операции по дате? (Да/Нет) \n", ["Да", "Нет"])
+    if sort_choice == "Да":
+        order_choice = get_user_choice(
+            "\nПрограмма: Отсортировать по возрастанию или по убыванию? (по возрастанию/по убыванию): \n",
+            ["по возрастанию", "по убыванию"])
+        reverse_sort = order_choice == "по убыванию"
+        filtered_transactions = sort_by_date(filtered_transactions, reverse_sort)
 
-    # Фильтр по рублям
-    if input("Только рублевые? Да(1)/Нет: ").lower().startswith('1'):
-        ops = [o for o in ops if o.get('currency') == 'RUB']
+    # Фильтруем по валюте
+    currency_choice = get_user_choice("\nВыводить только рублевые транзакции? (Да/Нет) \n", ["Да", "Нет"])
+    if currency_choice == "Да":
+        filtered_transactions = filter_rub_transactions(filtered_transactions)
 
-    # Фильтр по описанию
-    if input("Фильтровать по слову в описании? Да(1)/Нет: ").lower().startswith('1'):
-        term = input("Введите слово: ")
-        ops = filter_operations_by_description(ops, term)
+    # Фильтруем по ключевому слову
+    search_choice = get_user_choice("\nОтфильтровать список транзакций по определенному слову в описании? (Да/Нет) \n",
+                                    ["Да", "Нет"])
+    if search_choice == "Да":
+        search_word = input("\nВведите слово для поиска в описании: ").strip()
+        filtered_transactions = filter_operations_by_description(filtered_transactions, search_word)
 
-    # Вывод итогов
-    print(f"Найдено {len(ops)} операций")
-    for o in ops:
-        d = parse_date(o.get('date', '')).strftime('%d.%m.%Y')
-        print(f"{d} {o.get('description')} - {o.get('amount')} {o.get('currency_name')} {o.get('currency_code')} {o.get('from')} {o.get('to')}")
+    # Выводим результат
+    print("\nРаспечатываю итоговый список транзакций...\n")
+    print(f"Всего банковских операций в выборке: {len(filtered_transactions)}\n")
+
+    if not filtered_transactions:
+        print("Не найдено ни одной транзакции, подходящей под ваши условия фильтрации")
+    else:
+        for transaction in filtered_transactions:
+            print_transaction(transaction)
 
 
 if __name__ == '__main__':

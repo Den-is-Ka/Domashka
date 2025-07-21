@@ -10,6 +10,7 @@ def filter_operations_by_description(operations, search_str):
     pattern = re.compile(re.escape(search_str), re.IGNORECASE)
     return [op for op in operations if pattern.search(op.get('description', ''))]
 
+
 def count_operations_by_category(operations, categories):
     """
     Подсчитывает, сколько операций относится к каждой категории.
